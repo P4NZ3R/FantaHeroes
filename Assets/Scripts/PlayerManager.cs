@@ -42,11 +42,13 @@ public class PlayerManager : MonoBehaviour {
 
     public void BuySellHero(int idHero)
     {
+        if (HeroesManager.singleton.UpdateMatch())
+            return;
         Hero tmpHero = HeroesManager.singleton.SearchHero(idHero);
         int valueHero = tmpHero.valueHero;
         if (myHeroes.Contains(tmpHero))
         {
-            cash += valueHero-1;//sell hero
+            cash += valueHero;//sell hero
             myHeroes.Remove(tmpHero);
             PlayerPrefs.SetInt(idHero.ToString(),0);
         }

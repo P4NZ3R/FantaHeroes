@@ -31,10 +31,7 @@ public class GuiManager : MonoBehaviour {
 
     public void Refresh()
     {
-        for (int i = 0; i < HeroesManager.singleton.CalculateUpdateMatch()-HeroesManager.singleton.matchMakingCount; i++)
-        {
-            HeroesManager.singleton.MatchMaking();
-        }
+        HeroesManager.singleton.UpdateMatch();
 
         foreach (Transform child in transform) {
             GameObject.Destroy(child.gameObject);

@@ -8,7 +8,7 @@ public class HeroesManager : MonoBehaviour {
     public bool debugMode;
     public bool fightDebugMode;
     public int matchMakingCount;
-    public int matchCount;
+//    public int matchCount;
     public int heroCount=1;
     public int seed;
     public int numHeroes;
@@ -24,13 +24,7 @@ public class HeroesManager : MonoBehaviour {
             heroes[i] = new Hero(i);
             heroes[i].ToString();
         }
-
-        int updateMatch = CalculateUpdateMatch();
-
-        for (int i = 0; i < updateMatch && !fightDebugMode; i++)
-        {
-            MatchMaking();
-        }
+        UpdateMatch();
     }
 
 	// Use this for initialization
@@ -55,10 +49,22 @@ public class HeroesManager : MonoBehaviour {
         }
     }
 
+    public bool UpdateMatch()
+    {
+        bool updated = false;
+        int k = CalculateUpdateMatch() - matchMakingCount;
+        for (int i = 0; i < k && !fightDebugMode; i++)
+        {
+            MatchMaking();
+            updated = true;
+        }
+        return updated;
+    }
+
     public int CalculateUpdateMatch()
     {
         //return (System.DateTime.Today.Year-2017)*365*24 + (System.DateTime.Today.DayOfYear - 286)*24 + (System.DateTime.Now.Hour-19);
-        return (System.DateTime.Today.DayOfYear - 286)*24*60 + (System.DateTime.Now.Hour-20)*60 + (System.DateTime.Now.Minute-0);
+        return (System.DateTime.Today.DayOfYear - 286)*24*60 + (System.DateTime.Now.Hour-21)*60 + (System.DateTime.Now.Minute-0);
     }
 
     void PrintAll()
@@ -71,7 +77,7 @@ public class HeroesManager : MonoBehaviour {
 
     void Fight(Hero hero1,Hero hero2)
     {
-        matchCount++;
+//        matchCount++;
         Hero[] hero = new Hero[2];
         hero[0] = hero1;
         hero[1] = hero2;
@@ -271,22 +277,22 @@ public class Hero {
 
     public void UpdateRank()
     {
-        if (winCount - loseCount < 2)
+        if (winCount - loseCount < 2 && rank!="C")
         {
             rank = "D";
             valueHero = 5;
         }
-        else if (winCount - loseCount < 4)
+        else if (winCount - loseCount < 4 && rank!="B")
         {
             rank = "C";
             valueHero = 7;
         }
-        else if (winCount - loseCount < 6)
+        else if (winCount - loseCount < 6 && rank!="A")
         {
             rank = "B";
             valueHero = 10;
         }
-        else if (winCount - loseCount < 10)
+        else if (winCount - loseCount < 10 && rank!="S")
         {
             rank = "A";
             valueHero = 15;
