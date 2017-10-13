@@ -63,8 +63,8 @@ public class HeroesManager : MonoBehaviour {
 
     public int CalculateUpdateMatch()
     {
-        //return (System.DateTime.Today.Year-2017)*365*24 + (System.DateTime.Today.DayOfYear - 286)*24 + (System.DateTime.Now.Hour-19);
-        return (System.DateTime.Today.DayOfYear - 286)*24*60 + (System.DateTime.Now.Hour-21)*60 + (System.DateTime.Now.Minute-0);
+        return (System.DateTime.Today.Year-2017)*365*24 + (System.DateTime.Today.DayOfYear - 286)*24 + (System.DateTime.Now.Hour-0);
+//        return (System.DateTime.Today.DayOfYear - 286)*24*60 + (System.DateTime.Now.Hour-21)*60 + (System.DateTime.Now.Minute-32);
     }
 
     void PrintAll()
@@ -217,7 +217,7 @@ public class Hero {
     //const
     int highMinValue=6;
     int highMaxValue=9+1;
-    int lowMinValue=2;
+    int lowMinValue=1;
     int lowMaxValue=4+1;
     //attribute
     public int constitutionMin;
@@ -267,12 +267,16 @@ public class Hero {
     {
         winCount++;
         UpdateRank();
+        if((winCount+loseCount)%10==0)
+            UpgradeRandomStat(1,0);
     }
 
     public void Lose()
     {
         loseCount++;
         UpdateRank();
+        if((winCount+loseCount)%10==0)
+            UpgradeRandomStat(1,0);
     }
 
     public void UpdateRank()
@@ -280,27 +284,74 @@ public class Hero {
         if (winCount - loseCount < 2 && rank!="C")
         {
             rank = "D";
-            valueHero = 5;
+            valueHero = Mathf.Max(5 - Mathf.Max(loseCount-winCount,0),1);
         }
         else if (winCount - loseCount < 4 && rank!="B")
         {
+            if (rank == "D")
+            {
+                UpgradeRandomStat(1,0);
+                UpgradeRandomStat(1,1);
+            }
             rank = "C";
             valueHero = 7;
         }
         else if (winCount - loseCount < 6 && rank!="A")
         {
+            if (rank == "C")
+            {
+                UpgradeRandomStat(1,0);
+                UpgradeRandomStat(1,0);
+                UpgradeRandomStat(1,1);
+            }
             rank = "B";
             valueHero = 10;
+            UpgradeRandomStat();
         }
         else if (winCount - loseCount < 10 && rank!="S")
         {
+            if (rank == "B")
+            {
+                UpgradeRandomStat(1,0);
+                UpgradeRandomStat(1,1);
+                UpgradeRandomStat(1,1);
+            }
             rank = "A";
             valueHero = 15;
         }
         else
         {
+            if (rank == "A")
+            {
+                UpgradeRandomStat(1,0);
+                UpgradeRandomStat(1,1);
+                UpgradeRandomStat(2,1);
+            }
             rank = "S";
             valueHero = 25 + (winCount - loseCount-9)*2;
+        }
+    }
+
+    void UpgradeRandomStat(int valueMax=1,int valueMin=0)
+    {
+        switch(Random.Range(0,4+1))
+        {
+            case 0:
+                constitutionMax += valueMax;
+                constitutionMin += valueMin;
+                break;
+            case 1:
+                forceMax += valueMax;
+                forceMin += valueMin;
+                break;
+            case 2:
+                precisionMax += valueMax;
+                precisionMin += valueMin;
+                break;
+            case 3:
+                dodgeMax += valueMax;
+                dodgeMin += valueMin;
+                break;
         }
     }
 
