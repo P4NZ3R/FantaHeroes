@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class HeroesManager : MonoBehaviour {
-    public static HeroesManager heroesManager;
+    public static HeroesManager singleton;
 
     public bool debugMode;
     public bool fightDebugMode;
@@ -16,7 +16,7 @@ public class HeroesManager : MonoBehaviour {
 
     void Awake()
     {
-        heroesManager = this;
+        singleton = this;
         Random.InitState(seed);
         heroes = new Hero[numHeroes];
         for (int i = 0; i < numHeroes; i++)
@@ -24,7 +24,9 @@ public class HeroesManager : MonoBehaviour {
             heroes[i] = new Hero(i);
             heroes[i].ToString();
         }
-        int updateMatch = (System.DateTime.Today.Year-2017)*365*24 + (System.DateTime.Today.DayOfYear - 286)*24 + (System.DateTime.Now.Hour-0);
+
+        int updateMatch = CalculateUpdateMatch();
+
         for (int i = 0; i < updateMatch && !fightDebugMode; i++)
         {
             MatchMaking();
@@ -51,6 +53,12 @@ public class HeroesManager : MonoBehaviour {
             PrintAll();
             GuiManager.singleton.Refresh();
         }
+    }
+
+    public int CalculateUpdateMatch()
+    {
+        //return (System.DateTime.Today.Year-2017)*365*24 + (System.DateTime.Today.DayOfYear - 286)*24 + (System.DateTime.Now.Hour-19);
+        return (System.DateTime.Today.DayOfYear - 286)*24*60 + (System.DateTime.Now.Hour-19)*60 + (System.DateTime.Now.Minute-0);
     }
 
     void PrintAll()
@@ -178,7 +186,7 @@ public class HeroesManager : MonoBehaviour {
         for (int j = 0; j < 5; j++)
         {
             Hero fighter1=null;
-            for (int i = 0; i < heroes.Length/3; i++)
+            for (int i = 0; i < heroes.Length; i++)
             {
                 if (tmpHeroes[j,i] != null)
                 {
@@ -238,7 +246,7 @@ public class Hero {
         dodgeMin = Random.Range(lowMinValue, lowMaxValue);
         dodgeMax = Random.Range(highMinValue, highMaxValue);
 
-        id = HeroesManager.heroesManager.heroCount++;
+        id = HeroesManager.singleton.heroCount++;
         arrayPos = pos;
 
         constitutionMin = constitutionMin > constitutionMax ? constitutionMax-1 : constitutionMin;

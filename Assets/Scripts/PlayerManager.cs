@@ -5,6 +5,7 @@ using UnityEngine;
 public class PlayerManager : MonoBehaviour {
     public static PlayerManager singleton;
     public int cash;
+    public UnityEngine.UI.Text text;
 
     public List<Hero> myHeroes = new List<Hero>();
 
@@ -20,11 +21,12 @@ public class PlayerManager : MonoBehaviour {
         else
             cash = PlayerPrefs.GetInt("cash");
 
-        for (int i = 0; i < HeroesManager.heroesManager.heroes.Length; i++)
+        for (int i = 0; i < HeroesManager.singleton.heroes.Length; i++)
         {
-            if (PlayerPrefs.GetInt(HeroesManager.heroesManager.heroes[i].id.ToString()) == 1)
-                myHeroes.Add(HeroesManager.heroesManager.heroes[i]);
+            if (PlayerPrefs.GetInt(HeroesManager.singleton.heroes[i].id.ToString()) == 1)
+                myHeroes.Add(HeroesManager.singleton.heroes[i]);
         }
+        Refresh();
 	}
 	
 	// Update is called once per frame
@@ -32,9 +34,14 @@ public class PlayerManager : MonoBehaviour {
 		
 	}
 
+    public void Refresh()
+    {
+        text.text = "you have: "+(cash-1).ToString()+"$";
+    }
+
     public void BuySellHero(int idHero)
     {
-        Hero tmpHero = HeroesManager.heroesManager.SearchHero(idHero);
+        Hero tmpHero = HeroesManager.singleton.SearchHero(idHero);
         int valueHero = tmpHero.valueHero;
         if (myHeroes.Contains(tmpHero))
         {
@@ -52,5 +59,16 @@ public class PlayerManager : MonoBehaviour {
             }
         }
         PlayerPrefs.SetInt("cash",cash);
+        Refresh();
+    }
+
+    public void Restart()
+    {
+        PlayerPrefs.SetInt("cash", 0);
+        foreach (Hero hero in myHeroes)
+        {
+            PlayerPrefs.SetInt(hero.id.ToString(),0);
+        }
+        UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
     }
 }
