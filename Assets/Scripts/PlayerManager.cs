@@ -37,6 +37,7 @@ public class PlayerManager : MonoBehaviour {
     public void Refresh()
     {
         text.text = "you have: "+(cash-1).ToString()+"$";
+        text.fontSize = Screen.height / (638 / 14);
     }
 
     public void BuySellHero(int idHero)

@@ -58,7 +58,7 @@ public class HeroesManager : MonoBehaviour {
     public int CalculateUpdateMatch()
     {
         //return (System.DateTime.Today.Year-2017)*365*24 + (System.DateTime.Today.DayOfYear - 286)*24 + (System.DateTime.Now.Hour-19);
-        return (System.DateTime.Today.DayOfYear - 286)*24*60 + (System.DateTime.Now.Hour-19)*60 + (System.DateTime.Now.Minute-0);
+        return (System.DateTime.Today.DayOfYear - 286)*24*60 + (System.DateTime.Now.Hour-20)*60 + (System.DateTime.Now.Minute-0);
     }
 
     void PrintAll()

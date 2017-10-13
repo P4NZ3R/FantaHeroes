@@ -11,7 +11,7 @@ public class ButtonHero : MonoBehaviour {
             GetComponent<UnityEngine.UI.Image>().color = Color.grey;
         foreach (UnityEngine.UI.Text child in transform.GetComponentsInChildren<UnityEngine.UI.Text>())
         {
-//            child.fontSize =  1920*14/Screen.height;
+            child.fontSize =  Screen.height/(638/14);
         }
     }
 
