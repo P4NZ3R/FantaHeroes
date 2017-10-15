@@ -36,7 +36,7 @@ public class PlayerManager : MonoBehaviour {
 
     public void Refresh()
     {
-        text.text = "you have: "+(cash-1).ToString()+"$";
+        text.text = "you have: "+(cash-1).ToString()+"$ ("+(cash-1+HeroesValue()).ToString()+")";
         text.fontSize = Screen.height / (638 / 14);
     }
 
@@ -63,6 +63,16 @@ public class PlayerManager : MonoBehaviour {
         }
         PlayerPrefs.SetInt("cash",cash);
         Refresh();
+    }
+
+    public int HeroesValue()
+    {
+        int value = 0;
+        foreach (Hero hero in myHeroes)
+        {
+            value += hero.valueHero;
+        }
+        return value;
     }
 
     public void Restart()

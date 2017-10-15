@@ -14,6 +14,8 @@ public class HeroesManager : MonoBehaviour {
     public int numHeroes;
     public Hero[] heroes;
 
+    public enum Rank {S,A,B,C,D}
+
     void Awake()
     {
         singleton = this;
@@ -63,7 +65,7 @@ public class HeroesManager : MonoBehaviour {
 
     public int CalculateUpdateMatch()
     {
-        return (System.DateTime.Today.Year-2017)*365*24 + (System.DateTime.Today.DayOfYear - 286)*24 + (System.DateTime.Now.Hour-0);
+        return (System.DateTime.Today.Year-2017)*365*24 + (System.DateTime.Today.DayOfYear - 287)*24 + (System.DateTime.Now.Hour-0);
 //        return (System.DateTime.Today.DayOfYear - 286)*24*60 + (System.DateTime.Now.Hour-21)*60 + (System.DateTime.Now.Minute-32);
     }
 
@@ -85,13 +87,13 @@ public class HeroesManager : MonoBehaviour {
         int[] damagedealt = new int[2];
 
         //step 1
-        for (int i = 0; i < 10*2; i++)
+        for (int i = 0; i < 5*2; i++)
         {
             int j = i % 2;
             int k = (j + 1) % 2;
             if (Random.Range(hero[j].precisionMin, hero[j].precisionMax) - Random.Range(hero[k].dodgeMin, hero[k].dodgeMax) > 0)
             {
-                damagedealt[j] += Random.Range(Mathf.FloorToInt(hero[j].forceMin), hero[j].forceMax);
+                damagedealt[j] += Random.Range(hero[j].forceMin, hero[j].forceMax);
                 if (fightDebugMode)
                     Debug.Log(hero[j].id+" deal damage, damage amount "+damagedealt[i%2]);
             }
@@ -119,13 +121,13 @@ public class HeroesManager : MonoBehaviour {
             hero[0].Lose();
         }
 
-        if (damagedealt[0] > Random.Range(hero[1].constitutionMin*3,hero[1].constitutionMax*3)+20)
+        if (damagedealt[0] > Random.Range((hero[1].constitutionMin+5)*5,(hero[1].constitutionMax+5)*5)-Mathf.FloorToInt(hero[1].loseCount/2))
         {
             if(debugMode)
                 Debug.LogWarning("hero "+hero[1].id + " death");
             heroes[hero[1].arrayPos] = new Hero(hero[1].arrayPos);
         }
-        if (damagedealt[1] > Random.Range(hero[0].constitutionMin*3,hero[0].constitutionMax*3)+20)
+        if (damagedealt[1] > Random.Range((hero[0].constitutionMin+5)*5,(hero[0].constitutionMax+5)*5)-Mathf.FloorToInt(hero[0].loseCount/2))
         {
             if(debugMode)
                 Debug.LogWarning("hero "+hero[0].id + " death");
@@ -166,23 +168,23 @@ public class HeroesManager : MonoBehaviour {
         {
             switch (heroes[i].rank)
             {
-                case "S":
+                case HeroesManager.Rank.S:
                     tmpHeroes[4,index[4]] = heroes[i];
                     index[4]++;
                     break;
-                case "A":
+                case HeroesManager.Rank.A:
                     tmpHeroes[3,index[3]] = heroes[i];
                     index[3]++;
                     break;
-                case "B":
+                case HeroesManager.Rank.B:
                     tmpHeroes[2,index[2]] = heroes[i];
                     index[2]++;
                     break;
-                case "C":
+                case HeroesManager.Rank.C:
                     tmpHeroes[1,index[1]] = heroes[i];
                     index[1]++;
                     break;
-                case "D":
+                case HeroesManager.Rank.D:
                     tmpHeroes[0,index[0]] = heroes[i];
                     index[0]++;
                     break;
@@ -215,9 +217,9 @@ public class HeroesManager : MonoBehaviour {
 [System.Serializable]
 public class Hero {
     //const
-    int highMinValue=6;
+    int highMinValue=7;
     int highMaxValue=9+1;
-    int lowMinValue=1;
+    int lowMinValue=2;
     int lowMaxValue=4+1;
     //attribute
     public int constitutionMin;
@@ -233,11 +235,29 @@ public class Hero {
     //values
     public int id;
     public int arrayPos;
-    public string rank;
+    public HeroesManager.Rank rank;
     public int valueHero;
     public int winCount;
     public int loseCount;
 
+    public HeroesManager.Rank Rank
+    {
+        get{ return rank;}
+        set
+        { 
+            if (value != rank)
+            {
+                if (value < rank)
+                {
+                    UpgradeRandomStat(0, 1);
+                    UpgradeRandomStat(1, 0);
+                    rank = value;
+                }
+            }
+            //value hero
+            valueHero = Mathf.Max(5+(winCount-loseCount)*(5-(int)rank),5*(5-(int)rank));
+        }
+    }
     //power
 
     public Hero (int pos)
@@ -260,6 +280,7 @@ public class Hero {
         precisionMin = precisionMin > precisionMax ? precisionMax-1 : precisionMin;
         dodgeMin = dodgeMin > dodgeMax ? dodgeMax-1 : dodgeMin;
 
+        rank = HeroesManager.Rank.D;
         UpdateRank();
     }
 
@@ -279,56 +300,33 @@ public class Hero {
             UpgradeRandomStat(1,0);
     }
 
+    public float Avg()
+    {
+        return (constitutionMin + constitutionMax + forceMin + forceMax + precisionMin + precisionMax + dodgeMin + dodgeMax) / 8f;
+    }
+
+    //il controllo per non scendere di rank viene fatto nel set
     public void UpdateRank()
     {
-        if (winCount - loseCount < 2 && rank!="C")
+        if (winCount - loseCount < 5)
         {
-            rank = "D";
-            valueHero = Mathf.Max(5 - Mathf.Max(loseCount-winCount,0),1);
+            Rank = HeroesManager.Rank.D;
         }
-        else if (winCount - loseCount < 4 && rank!="B")
+        else if (winCount - loseCount < 10)
         {
-            if (rank == "D")
-            {
-                UpgradeRandomStat(1,0);
-                UpgradeRandomStat(1,1);
-            }
-            rank = "C";
-            valueHero = 7;
+            Rank = HeroesManager.Rank.C;
         }
-        else if (winCount - loseCount < 6 && rank!="A")
+        else if (winCount - loseCount < 15)
         {
-            if (rank == "C")
-            {
-                UpgradeRandomStat(1,0);
-                UpgradeRandomStat(1,0);
-                UpgradeRandomStat(1,1);
-            }
-            rank = "B";
-            valueHero = 10;
-            UpgradeRandomStat();
+            Rank = HeroesManager.Rank.B;
         }
-        else if (winCount - loseCount < 10 && rank!="S")
+        else if (winCount - loseCount < 20)
         {
-            if (rank == "B")
-            {
-                UpgradeRandomStat(1,0);
-                UpgradeRandomStat(1,1);
-                UpgradeRandomStat(1,1);
-            }
-            rank = "A";
-            valueHero = 15;
+            Rank=HeroesManager.Rank.A;
         }
         else
         {
-            if (rank == "A")
-            {
-                UpgradeRandomStat(1,0);
-                UpgradeRandomStat(1,1);
-                UpgradeRandomStat(2,1);
-            }
-            rank = "S";
-            valueHero = 25 + (winCount - loseCount-9)*2;
+            Rank=HeroesManager.Rank.S;
         }
     }
 
@@ -339,18 +337,46 @@ public class Hero {
             case 0:
                 constitutionMax += valueMax;
                 constitutionMin += valueMin;
+
+                if (constitutionMax < highMinValue)
+                    constitutionMax = highMinValue;
+                if (constitutionMin > lowMaxValue)
+                    constitutionMin = lowMaxValue;
+                if (constitutionMin <= 0)
+                    constitutionMin = 1;
                 break;
             case 1:
                 forceMax += valueMax;
                 forceMin += valueMin;
+
+                if (forceMax < highMinValue)
+                    forceMax = highMinValue;
+                if (forceMin > lowMaxValue)
+                    forceMin = lowMaxValue;
+                if (forceMin <= 0)
+                    forceMin = 1;
                 break;
             case 2:
                 precisionMax += valueMax;
                 precisionMin += valueMin;
+
+                if (precisionMax < highMinValue)
+                    precisionMax = highMinValue;
+                if (precisionMin > lowMaxValue)
+                    precisionMin = lowMaxValue;
+                if (precisionMin <= 0)
+                    precisionMin = 1;
                 break;
             case 3:
                 dodgeMax += valueMax;
                 dodgeMin += valueMin;
+
+                if (dodgeMax < highMinValue)
+                    dodgeMax = highMinValue;
+                if (dodgeMin > lowMaxValue)
+                    dodgeMin = lowMaxValue;
+                if (dodgeMin <= 0)
+                    dodgeMin = 1;
                 break;
         }
     }
