@@ -16,14 +16,14 @@ public class PlayerManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        if (PlayerPrefs.GetInt("cash") == 0)
+        if (PlayerPrefs.GetInt("cash"+(int)HeroesManager.singleton.activeTournament) == 0)
             cash = 11;
         else
-            cash = PlayerPrefs.GetInt("cash");
+            cash = PlayerPrefs.GetInt("cash"+(int)HeroesManager.singleton.activeTournament);
 
         for (int i = 0; i < HeroesManager.singleton.heroes.Length; i++)
         {
-            if (PlayerPrefs.GetInt(HeroesManager.singleton.heroes[i].id.ToString()) == 1)
+            if (PlayerPrefs.GetInt((int)HeroesManager.singleton.activeTournament + ","+HeroesManager.singleton.heroes[i].id.ToString()) == 1)
                 myHeroes.Add(HeroesManager.singleton.heroes[i]);
         }
         Refresh();
@@ -36,7 +36,9 @@ public class PlayerManager : MonoBehaviour {
 
     public void Refresh()
     {
-        text.text = "you have: "+(cash-1).ToString()+"$ ("+(cash-1+HeroesValue()).ToString()+")";
+        if (!text)
+            return;
+        text.text = "["+(int)HeroesManager.singleton.activeTournament+"] "+"you have: "+(cash-1).ToString()+"$ ("+(cash-1+HeroesValue()).ToString()+")";
         text.fontSize = Screen.height / (638 / 14);
     }
 
@@ -50,7 +52,7 @@ public class PlayerManager : MonoBehaviour {
         {
             cash += valueHero;//sell hero
             myHeroes.Remove(tmpHero);
-            PlayerPrefs.SetInt(idHero.ToString(),0);
+            PlayerPrefs.SetInt((int)HeroesManager.singleton.activeTournament + "," +idHero,0);
         }
         else
         {
@@ -58,10 +60,10 @@ public class PlayerManager : MonoBehaviour {
             {
                 cash -= valueHero;//buy hero
                 myHeroes.Add(tmpHero);
-                PlayerPrefs.SetInt(idHero.ToString(),1);
+                PlayerPrefs.SetInt((int)HeroesManager.singleton.activeTournament + "," +idHero,1);
             }
         }
-        PlayerPrefs.SetInt("cash",cash);
+        PlayerPrefs.SetInt("cash"+(int)HeroesManager.singleton.activeTournament,cash);
         Refresh();
     }
 
@@ -77,11 +79,17 @@ public class PlayerManager : MonoBehaviour {
 
     public void Restart()
     {
-        PlayerPrefs.SetInt("cash", 0);
+        PlayerPrefs.SetInt("cash"+(int)HeroesManager.singleton.activeTournament, 11);
         foreach (Hero hero in myHeroes)
         {
-            PlayerPrefs.SetInt(hero.id.ToString(),0);
+            PlayerPrefs.SetInt((int)HeroesManager.singleton.activeTournament + "," +hero.id,0);
         }
         UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+    }
+
+    public void OnHeroDie(Hero hero)
+    {
+        myHeroes.Remove(hero);
+        PlayerPrefs.SetInt((int)HeroesManager.singleton.activeTournament + "," +hero.id,0);
     }
 }

@@ -10,16 +10,30 @@ public class HeroesManager : MonoBehaviour {
     public int matchMakingCount;
 //    public int matchCount;
     public int heroCount=1;
-    public int seed;
+//    [HideInInspector]
+//    public int seed;
+    [HideInInspector]
     public int numHeroes;
     public Hero[] heroes;
 
     public enum Rank {S,A,B,C,D}
+    public enum TournamentType {hour,fiveMin,length}
+
+    [HideInInspector]
+    public int activeTournament;
+    public Tournament[] tournaments;
 
     void Awake()
     {
         singleton = this;
-        Random.InitState(seed);
+        activeTournament = PlayerPrefs.GetInt("activeTournament");
+        if (activeTournament > tournaments.Length)
+        {
+            activeTournament = 0;
+            PlayerPrefs.SetInt("activeTournament",0);
+        }
+        numHeroes = tournaments[activeTournament].numHeroes;
+        Random.InitState(activeTournament);
         heroes = new Hero[numHeroes];
         for (int i = 0; i < numHeroes; i++)
         {
@@ -51,6 +65,13 @@ public class HeroesManager : MonoBehaviour {
         }
     }
 
+    public void ChangeTournament()
+    {
+        activeTournament = activeTournament + 1 >= tournaments.Length ? 0 : activeTournament + 1;
+        PlayerPrefs.SetInt("activeTournament",activeTournament);
+        UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+    }
+
     public bool UpdateMatch()
     {
         bool updated = false;
@@ -65,8 +86,17 @@ public class HeroesManager : MonoBehaviour {
 
     public int CalculateUpdateMatch()
     {
-        return (System.DateTime.Today.Year-2017)*365*24 + (System.DateTime.Today.DayOfYear - 287)*24 + (System.DateTime.Now.Hour-0);
-//        return (System.DateTime.Today.DayOfYear - 286)*24*60 + (System.DateTime.Now.Hour-21)*60 + (System.DateTime.Now.Minute-32);
+        switch (tournaments[activeTournament].tournamentType)
+        {
+            case TournamentType.hour:
+                return (System.DateTime.Today.Year - 2017)*365*24 + (System.DateTime.Today.DayOfYear - 286)*24 + (System.DateTime.Now.Hour - 0);
+            case TournamentType.fiveMin:
+                return (System.DateTime.Today.Year - 2017)*365*24*12 + (System.DateTime.Today.DayOfYear - 289)*24*12 + (System.DateTime.Now.Hour-19)*12 + Mathf.FloorToInt(System.DateTime.Now.Minute/5);
+            default:
+                Debug.LogError("no activeTournament found");
+            break;
+        }
+        return 0;
     }
 
     void PrintAll()
@@ -121,17 +151,21 @@ public class HeroesManager : MonoBehaviour {
             hero[0].Lose();
         }
 
-        if (damagedealt[0] > Random.Range((hero[1].constitutionMin+5)*5,(hero[1].constitutionMax+5)*5)-Mathf.FloorToInt(hero[1].loseCount/2))
+        if (damagedealt[0] > Random.Range((hero[1].constitutionMin+5)*5,(hero[1].constitutionMax+5)*5)-Mathf.FloorToInt(hero[1].loseCount*tournaments[activeTournament].loseCountMultiplier))
         {
             if(debugMode)
                 Debug.LogWarning("hero "+hero[1].id + " death");
+            PlayerManager.singleton.OnHeroDie(hero[1]);
             heroes[hero[1].arrayPos] = new Hero(hero[1].arrayPos);
+            hero[0].killCount++;
         }
-        if (damagedealt[1] > Random.Range((hero[0].constitutionMin+5)*5,(hero[0].constitutionMax+5)*5)-Mathf.FloorToInt(hero[0].loseCount/2))
+        if (damagedealt[1] > Random.Range((hero[0].constitutionMin+5)*5,(hero[0].constitutionMax+5)*5)-Mathf.FloorToInt(hero[0].loseCount*tournaments[activeTournament].loseCountMultiplier))
         {
             if(debugMode)
                 Debug.LogWarning("hero "+hero[0].id + " death");
+            PlayerManager.singleton.OnHeroDie(hero[0]);
             heroes[hero[0].arrayPos] = new Hero(hero[0].arrayPos);
+            hero[1].killCount++;
         }
     }
 
@@ -211,6 +245,7 @@ public class HeroesManager : MonoBehaviour {
         if(debugMode)
             Debug.Log("-------------------- match:" + matchMakingCount + " end");
         matchMakingCount++;
+        PlayerManager.singleton.Refresh();
     }
 }
 
@@ -239,19 +274,27 @@ public class Hero {
     public int valueHero;
     public int winCount;
     public int loseCount;
+    public int killCount;
+    public bool isNew;
 
     public HeroesManager.Rank Rank
     {
         get{ return rank;}
         set
         { 
+            isNew = false;
             if (value != rank)
             {
                 if (value < rank)
                 {
-                    UpgradeRandomStat(0, 1);
                     UpgradeRandomStat(1, 0);
+                    UpgradeRandomStat(1, 0);
+                    UpgradeRandomStat(1, 0);
+                    UpgradeRandomStat(1, 0);
+                    UpgradeRandomStat(1, 0);
+                    UpgradeRandomStat(0, 1);
                     rank = value;
+                    isNew = true;
                 }
             }
             //value hero
@@ -282,22 +325,23 @@ public class Hero {
 
         rank = HeroesManager.Rank.D;
         UpdateRank();
+        isNew = true;
     }
 
     public void Win()
     {
         winCount++;
         UpdateRank();
-        if((winCount+loseCount)%10==0)
-            UpgradeRandomStat(1,0);
+//        if((winCount)%5==0)
+//            UpgradeRandomStat(1,0);
     }
 
     public void Lose()
     {
         loseCount++;
         UpdateRank();
-        if((winCount+loseCount)%10==0)
-            UpgradeRandomStat(1,0);
+        if((loseCount)%5==0)
+            UpgradeRandomStat(-1,0);
     }
 
     public float Avg()
@@ -308,19 +352,20 @@ public class Hero {
     //il controllo per non scendere di rank viene fatto nel set
     public void UpdateRank()
     {
-        if (winCount - loseCount < 5)
+        int winLoseForRankUp = HeroesManager.singleton.tournaments[HeroesManager.singleton.activeTournament].winLoseForRankUp;
+        if (winCount - loseCount < winLoseForRankUp*1)
         {
             Rank = HeroesManager.Rank.D;
         }
-        else if (winCount - loseCount < 10)
+        else if (winCount - loseCount < winLoseForRankUp*2)
         {
             Rank = HeroesManager.Rank.C;
         }
-        else if (winCount - loseCount < 15)
+        else if (winCount - loseCount < winLoseForRankUp*3)
         {
             Rank = HeroesManager.Rank.B;
         }
-        else if (winCount - loseCount < 20)
+        else if (winCount - loseCount < winLoseForRankUp*4)
         {
             Rank=HeroesManager.Rank.A;
         }

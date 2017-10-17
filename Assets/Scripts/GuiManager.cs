@@ -9,6 +9,8 @@ public class GuiManager : MonoBehaviour {
     public int numColumn = 2;
     public int numRowForPages = 6;
     float pages = 3;
+    [HideInInspector]
+    public bool showOnlyMyHeroes;
 
     public void Awake()
     {
@@ -40,16 +42,19 @@ public class GuiManager : MonoBehaviour {
         {
             for (int i = 0; i < HeroesManager.singleton.heroes.Length; i++)
             {
-                if ((int)HeroesManager.singleton.heroes[i].rank != j)
+                Hero tmpHero = HeroesManager.singleton.heroes[i];
+                if ((int)tmpHero.rank != j || (showOnlyMyHeroes && !PlayerManager.singleton.myHeroes.Contains(tmpHero)))
                     continue;
+                if (showOnlyMyHeroes)
+                    GetComponent<RectTransform>().localPosition = new Vector3(0,-100000,0);
                 GameObject go = Instantiate(prefabHero, Vector3.zero, Quaternion.identity);
                 go.transform.SetParent(transform);
-                Hero tmpHero = HeroesManager.singleton.heroes[i];
 
 
                 go.transform.GetChild(0).GetComponent<UnityEngine.UI.Text>().text = tmpHero.id.ToString()+tmpHero.rank.ToString() +" ("+tmpHero.valueHero+") ["+tmpHero.Avg().ToString("F1")+"]";
                 go.transform.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = "const.:"+tmpHero.constitutionMin+"-"+tmpHero.constitutionMax+"\nprec.:"+tmpHero.precisionMin+"-"+tmpHero.precisionMax+"\nwin:"+tmpHero.winCount;
                 go.transform.GetChild(2).GetComponent<UnityEngine.UI.Text>().text = "force.:"+tmpHero.forceMin+"-"+tmpHero.forceMax+"\ndodge.:"+tmpHero.dodgeMin+"-"+tmpHero.dodgeMax+"\nlose:"+tmpHero.loseCount;
+                go.transform.GetChild(3).GetComponent<UnityEngine.UI.Text>().text = tmpHero.killCount>0 ? "kill: "+tmpHero.killCount : "";
 
                 switch (tmpHero.rank)
                 {
@@ -70,5 +75,11 @@ public class GuiManager : MonoBehaviour {
                 go.GetComponent<ButtonHero>().id = tmpHero.id;
             }
         }
+    }
+
+    public void ToggleShowOnlyMyHero()
+    {
+        showOnlyMyHeroes = !showOnlyMyHeroes;
+        Refresh();
     }
 }

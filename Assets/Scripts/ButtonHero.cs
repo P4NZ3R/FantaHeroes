@@ -8,10 +8,8 @@ public class ButtonHero : MonoBehaviour {
     public void Start()
     {
         Hero hero = HeroesManager.singleton.SearchHero(id);
-        if(PlayerManager.singleton.myHeroes.Contains(hero))
-            GetComponent<UnityEngine.UI.Image>().color = Color.grey;
-        else if(hero.winCount+hero.loseCount<=2)
-            GetComponent<UnityEngine.UI.Image>().color = Color.white;
+
+        GetComponent<UnityEngine.UI.Image>().color = PlayerManager.singleton.myHeroes.Contains(hero) ? Color.grey : hero.isNew ? Color.white : GetComponent<UnityEngine.UI.Image>().color;
 
         foreach (UnityEngine.UI.Text child in transform.GetComponentsInChildren<UnityEngine.UI.Text>())
         {
