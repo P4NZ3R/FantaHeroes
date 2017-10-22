@@ -52,8 +52,8 @@ public class GuiManager : MonoBehaviour {
 
 
                 go.transform.GetChild(0).GetComponent<UnityEngine.UI.Text>().text = tmpHero.id.ToString()+tmpHero.rank.ToString() +" ("+tmpHero.valueHero+") ["+tmpHero.Avg().ToString("F1")+"]";
-                go.transform.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = "const.:"+tmpHero.constitutionMin+"-"+tmpHero.constitutionMax+"\nprec.:"+tmpHero.precisionMin+"-"+tmpHero.precisionMax+"\nwin:"+tmpHero.winCount;
-                go.transform.GetChild(2).GetComponent<UnityEngine.UI.Text>().text = "force.:"+tmpHero.forceMin+"-"+tmpHero.forceMax+"\ndodge.:"+tmpHero.dodgeMin+"-"+tmpHero.dodgeMax+"\nlose:"+tmpHero.loseCount;
+                go.transform.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = "const.:"+tmpHero.constitution+"\nprecis.:"+tmpHero.precision+"\nchar.:"+tmpHero.charisma+"\nwin:"+tmpHero.winCount;
+                go.transform.GetChild(2).GetComponent<UnityEngine.UI.Text>().text = "force.:"+tmpHero.force+"\ndodge.:"+tmpHero.dodge+"\nagility:"+tmpHero.agility+"\nlose:"+tmpHero.loseCount;
                 go.transform.GetChild(3).GetComponent<UnityEngine.UI.Text>().text = tmpHero.killCount>0 ? "kill: "+tmpHero.killCount : "";
 
                 switch (tmpHero.rank)

@@ -89,9 +89,9 @@ public class HeroesManager : MonoBehaviour {
         switch (tournaments[activeTournament].tournamentType)
         {
             case TournamentType.hour:
-                return (System.DateTime.Today.Year - 2017)*365*24 + (System.DateTime.Today.DayOfYear - 286)*24 + (System.DateTime.Now.Hour - 0);
+                return (System.DateTime.Today.Year - 2017)*365*24 + (System.DateTime.Today.DayOfYear - 295)*24 + (System.DateTime.Now.Hour - 0);
             case TournamentType.fiveMin:
-                return (System.DateTime.Today.Year - 2017)*365*24*12 + (System.DateTime.Today.DayOfYear - 289)*24*12 + (System.DateTime.Now.Hour-19)*12 + Mathf.FloorToInt(System.DateTime.Now.Minute/5);
+                return (System.DateTime.Today.Year - 2017)*365*24*12 + (System.DateTime.Today.DayOfYear - 295)*24*12 + (System.DateTime.Now.Hour-19)*12 + Mathf.FloorToInt(System.DateTime.Now.Minute/5);
             default:
                 Debug.LogError("no activeTournament found");
             break;
@@ -117,21 +117,25 @@ public class HeroesManager : MonoBehaviour {
         int[] damagedealt = new int[2];
 
         //step 1
-        for (int i = 0; i < 5*2; i++)
+        int turns = Mathf.Max(hero1.agility,hero2.agility);
+        for (int i = 0; i < turns*2; i++)
         {
             int j = i % 2;
             int k = (j + 1) % 2;
-            if (Random.Range(hero[j].precisionMin, hero[j].precisionMax) - Random.Range(hero[k].dodgeMin, hero[k].dodgeMax) > 0)
+            if (hero[j].agility < (i+1) / 2f)
+                continue;
+            if (Random.Range(0, hero[j].precision) - Random.Range(0, hero[k].dodge) > 0)
             {
-                damagedealt[j] += Random.Range(hero[j].forceMin, hero[j].forceMax);
+                damagedealt[j] += Random.Range(0, hero[j].force);
                 if (fightDebugMode)
-                    Debug.Log(hero[j].id+" deal damage, damage amount "+damagedealt[i%2]);
+                    Debug.Log((i+1)+" -> "+ hero[j].id+" deal damage, damage amount "+damagedealt[i%2]);
             }
             else
             {
                 if (fightDebugMode)
-                    Debug.Log(hero[j].id+" miss");
+                    Debug.Log((i+1)+" -> "+hero[j].id+" miss");
             }
+
         }
         if(fightDebugMode)
             Debug.Log("___ "+damagedealt[0]+" <-> "+damagedealt[1]+" ___");
@@ -151,7 +155,7 @@ public class HeroesManager : MonoBehaviour {
             hero[0].Lose();
         }
 
-        if (damagedealt[0] > Random.Range((hero[1].constitutionMin+5)*5,(hero[1].constitutionMax+5)*5)-Mathf.FloorToInt(hero[1].loseCount*tournaments[activeTournament].loseCountMultiplier))
+        if (damagedealt[0] > Random.Range(3*5,(hero[1].constitution+5)*5)-Mathf.FloorToInt(hero[1].loseCount*tournaments[activeTournament].loseCountMultiplier))
         {
             if(debugMode)
                 Debug.LogWarning("hero "+hero[1].id + " death");
@@ -159,7 +163,7 @@ public class HeroesManager : MonoBehaviour {
             heroes[hero[1].arrayPos] = new Hero(hero[1].arrayPos);
             hero[0].killCount++;
         }
-        if (damagedealt[1] > Random.Range((hero[0].constitutionMin+5)*5,(hero[0].constitutionMax+5)*5)-Mathf.FloorToInt(hero[0].loseCount*tournaments[activeTournament].loseCountMultiplier))
+        if (damagedealt[1] > Random.Range(3*5,(hero[0].constitution+5)*5)-Mathf.FloorToInt(hero[0].loseCount*tournaments[activeTournament].loseCountMultiplier))
         {
             if(debugMode)
                 Debug.LogWarning("hero "+hero[0].id + " death");
@@ -252,20 +256,17 @@ public class HeroesManager : MonoBehaviour {
 [System.Serializable]
 public class Hero {
     //const
-    int highMinValue=7;
-    int highMaxValue=9+1;
-    int lowMinValue=2;
-    int lowMaxValue=4+1;
+    int minValue=5;
+    int maxValue=9+1;
     //attribute
-    public int constitutionMin;
-    public int constitutionMax;
-    public int forceMin;
-    public int forceMax;
+    public int constitution;
+    public int force;
 
-    public int precisionMin;
-    public int precisionMax;
-    public int dodgeMin;
-    public int dodgeMax;
+    public int precision;
+    public int dodge;
+
+    public int charisma;
+    public int agility;
 
     //values
     public int id;
@@ -287,12 +288,9 @@ public class Hero {
             {
                 if (value < rank)
                 {
-                    UpgradeRandomStat(1, 0);
-                    UpgradeRandomStat(1, 0);
-                    UpgradeRandomStat(1, 0);
-                    UpgradeRandomStat(1, 0);
-                    UpgradeRandomStat(1, 0);
-                    UpgradeRandomStat(0, 1);
+                    UpgradeRandomStat(1);
+                    UpgradeRandomStat(1);
+                    UpgradeRandomStat(1);
                     rank = value;
                     isNew = true;
                 }
@@ -305,23 +303,22 @@ public class Hero {
 
     public Hero (int pos)
     {
-        constitutionMin = Random.Range(lowMinValue, lowMaxValue);
-        constitutionMax = Random.Range(highMinValue, highMaxValue);
-        forceMin = Random.Range(lowMinValue, lowMaxValue);
-        forceMax = Random.Range(highMinValue, highMaxValue);
+        constitution = Random.Range(minValue, maxValue);
+        force = Random.Range(minValue, maxValue);
 
-        precisionMin = Random.Range(lowMinValue, lowMaxValue);
-        precisionMax = Random.Range(highMinValue, highMaxValue);
-        dodgeMin = Random.Range(lowMinValue, lowMaxValue);
-        dodgeMax = Random.Range(highMinValue, highMaxValue);
+        precision = Random.Range(minValue, maxValue);
+        dodge = Random.Range(minValue, maxValue);
+
+        charisma = Random.Range(minValue, maxValue);
+        agility = Random.Range(minValue, maxValue);
 
         id = HeroesManager.singleton.heroCount++;
         arrayPos = pos;
 
-        constitutionMin = constitutionMin > constitutionMax ? constitutionMax-1 : constitutionMin;
-        forceMin = forceMin > forceMax ? forceMax-1 : forceMin;
-        precisionMin = precisionMin > precisionMax ? precisionMax-1 : precisionMin;
-        dodgeMin = dodgeMin > dodgeMax ? dodgeMax-1 : dodgeMin;
+//        constitution = constitution < minValue ? minValue : constitution;
+//        force = force < minValue ? minValue : force;
+//        precision = precision < minValue ? minValue : precision;
+//        dodge = dodge < minValue ? minValue : dodge;
 
         rank = HeroesManager.Rank.D;
         UpdateRank();
@@ -333,20 +330,20 @@ public class Hero {
         winCount++;
         UpdateRank();
 //        if((winCount)%5==0)
-//            UpgradeRandomStat(1,0);
+//            UpgradeRandomStat(1);
     }
 
     public void Lose()
     {
         loseCount++;
         UpdateRank();
-        if((loseCount)%5==0)
-            UpgradeRandomStat(-1,0);
+        if((loseCount)%charisma==0)
+            UpgradeRandomStat(-1);
     }
 
     public float Avg()
     {
-        return (constitutionMin + constitutionMax + forceMin + forceMax + precisionMin + precisionMax + dodgeMin + dodgeMax) / 8f;
+        return (constitution + force + precision + dodge + agility + charisma) / 6f;
     }
 
     //il controllo per non scendere di rank viene fatto nel set
@@ -375,53 +372,21 @@ public class Hero {
         }
     }
 
-    void UpgradeRandomStat(int valueMax=1,int valueMin=0)
+    void UpgradeRandomStat(int value=1)
     {
         switch(Random.Range(0,4+1))
         {
             case 0:
-                constitutionMax += valueMax;
-                constitutionMin += valueMin;
-
-                if (constitutionMax < highMinValue)
-                    constitutionMax = highMinValue;
-                if (constitutionMin > lowMaxValue)
-                    constitutionMin = lowMaxValue;
-                if (constitutionMin <= 0)
-                    constitutionMin = 1;
+                constitution += value + constitution < minValue ? minValue : value;
                 break;
             case 1:
-                forceMax += valueMax;
-                forceMin += valueMin;
-
-                if (forceMax < highMinValue)
-                    forceMax = highMinValue;
-                if (forceMin > lowMaxValue)
-                    forceMin = lowMaxValue;
-                if (forceMin <= 0)
-                    forceMin = 1;
+                force += value + force < minValue ? minValue : value;
                 break;
             case 2:
-                precisionMax += valueMax;
-                precisionMin += valueMin;
-
-                if (precisionMax < highMinValue)
-                    precisionMax = highMinValue;
-                if (precisionMin > lowMaxValue)
-                    precisionMin = lowMaxValue;
-                if (precisionMin <= 0)
-                    precisionMin = 1;
+                precision += value + precision < minValue ? minValue : value;
                 break;
             case 3:
-                dodgeMax += valueMax;
-                dodgeMin += valueMin;
-
-                if (dodgeMax < highMinValue)
-                    dodgeMax = highMinValue;
-                if (dodgeMin > lowMaxValue)
-                    dodgeMin = lowMaxValue;
-                if (dodgeMin <= 0)
-                    dodgeMin = 1;
+                dodge += value + dodge < minValue ? minValue : value;
                 break;
         }
     }
@@ -431,10 +396,12 @@ public class Hero {
         string tmp = "id=" + id.ToString() +
                      ", win=" + winCount.ToString() +
                      ", lose=" + loseCount.ToString() +
-                     ", constitution=" + constitutionMin + "-" + constitutionMax +
-                     ", force=" + forceMin + "-" + forceMax +
-                     ", precision=" + precisionMin + "-" + precisionMax +
-                     ", dodge=" + dodgeMin + "-" + dodgeMax;
+                     ", constitution=" + constitution +
+                     ", force=" + force +
+                     ", precision=" + precision +
+                     ", dodge=" + dodge +
+                        ", charisma=" + charisma +
+                        ", agility=" + agility;
         if (stamp)
             Debug.Log(tmp);
         return tmp;
