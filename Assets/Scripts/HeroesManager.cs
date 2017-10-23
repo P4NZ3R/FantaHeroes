@@ -17,11 +17,18 @@ public class HeroesManager : MonoBehaviour {
     public Hero[] heroes;
 
     public enum Rank {S,A,B,C,D}
-    public enum TournamentType {hour,fiveMin,length}
+    public enum TournamentType {test,hour,fiveMin,length}
 
     [HideInInspector]
     public int activeTournament;
     public Tournament[] tournaments;
+
+//    [SerializeField]
+    public float avgHeroLife;
+//    [SerializeField]
+    public float avgHeroDeath;
+//    [SerializeField]
+    public float avgHeroWin;
 
     void Awake()
     {
@@ -53,6 +60,7 @@ public class HeroesManager : MonoBehaviour {
         int num = Input.GetKeyDown(KeyCode.Space) ? 1 : 0;
         num = Input.GetKeyDown(KeyCode.LeftControl) ? 10 : num;
         num = Input.GetKeyDown(KeyCode.RightControl) ? 100 : num;
+        num = Input.GetKeyDown(KeyCode.Return) ? 1000 : num;
 
         if (num>0 && heroes.Length>1)
         {
@@ -89,9 +97,11 @@ public class HeroesManager : MonoBehaviour {
         switch (tournaments[activeTournament].tournamentType)
         {
             case TournamentType.hour:
-                return (System.DateTime.Today.Year - 2017)*365*24 + (System.DateTime.Today.DayOfYear - 295)*24 + (System.DateTime.Now.Hour - 0);
+                return (System.DateTime.Today.Year - 2017)*365*24 + (System.DateTime.Today.DayOfYear - 297)*24 + (System.DateTime.Now.Hour - 0);
             case TournamentType.fiveMin:
-                return (System.DateTime.Today.Year - 2017)*365*24*12 + (System.DateTime.Today.DayOfYear - 295)*24*12 + (System.DateTime.Now.Hour-19)*12 + Mathf.FloorToInt(System.DateTime.Now.Minute/5);
+                return (System.DateTime.Today.Year - 2017)*365*24*12 + (System.DateTime.Today.DayOfYear - 297)*24*12 + (System.DateTime.Now.Hour-19)*12 + Mathf.FloorToInt(System.DateTime.Now.Minute/5);
+            case TournamentType.test:
+                return 0;
             default:
                 Debug.LogError("no activeTournament found");
             break;
@@ -155,7 +165,7 @@ public class HeroesManager : MonoBehaviour {
             hero[0].Lose();
         }
 
-        if (damagedealt[0] > Random.Range(3*5,(hero[1].constitution+5)*5)-Mathf.FloorToInt(hero[1].loseCount*tournaments[activeTournament].loseCountMultiplier))
+        if (damagedealt[0] > 10*Random.Range(hero[1].constitution/2,hero[1].constitution) - Mathf.FloorToInt(hero[1].loseCount*tournaments[activeTournament].loseCountMultiplier/hero[1].charisma))
         {
             if(debugMode)
                 Debug.LogWarning("hero "+hero[1].id + " death");
@@ -163,7 +173,7 @@ public class HeroesManager : MonoBehaviour {
             heroes[hero[1].arrayPos] = new Hero(hero[1].arrayPos);
             hero[0].killCount++;
         }
-        if (damagedealt[1] > Random.Range(3*5,(hero[0].constitution+5)*5)-Mathf.FloorToInt(hero[0].loseCount*tournaments[activeTournament].loseCountMultiplier))
+        if (damagedealt[1] > 10*Random.Range(hero[0].constitution/2,hero[0].constitution) - Mathf.FloorToInt(hero[0].loseCount*tournaments[activeTournament].loseCountMultiplier/hero[0].charisma))
         {
             if(debugMode)
                 Debug.LogWarning("hero "+hero[0].id + " death");
@@ -291,6 +301,8 @@ public class Hero {
                     UpgradeRandomStat(1);
                     UpgradeRandomStat(1);
                     UpgradeRandomStat(1);
+                    UpgradeRandomStat(1);
+                    UpgradeRandomStat(1);
                     rank = value;
                     isNew = true;
                 }
@@ -329,16 +341,12 @@ public class Hero {
     {
         winCount++;
         UpdateRank();
-//        if((winCount)%5==0)
-//            UpgradeRandomStat(1);
     }
 
     public void Lose()
     {
         loseCount++;
         UpdateRank();
-        if((loseCount)%charisma==0)
-            UpgradeRandomStat(-1);
     }
 
     public float Avg()
@@ -374,7 +382,7 @@ public class Hero {
 
     void UpgradeRandomStat(int value=1)
     {
-        switch(Random.Range(0,4+1))
+        switch(Random.Range(0,5+1))
         {
             case 0:
                 constitution += value + constitution < minValue ? minValue : value;
@@ -387,6 +395,12 @@ public class Hero {
                 break;
             case 3:
                 dodge += value + dodge < minValue ? minValue : value;
+                break;
+            case 4:
+                agility += value + agility < minValue ? minValue : value;
+                break;
+            case 5:
+                charisma += value + charisma < minValue ? minValue : value;
                 break;
         }
     }

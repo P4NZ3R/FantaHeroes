@@ -89,6 +89,11 @@ public class PlayerManager : MonoBehaviour {
 
     public void OnHeroDie(Hero hero)
     {
+        HeroesManager mng = HeroesManager.singleton;
+        int heroesDead = (mng.heroCount + 1) - mng.tournaments[mng.activeTournament].numHeroes;
+        mng.avgHeroLife = (mng.avgHeroLife * (heroesDead-1) + hero.winCount+hero.loseCount) / heroesDead;
+        mng.avgHeroWin = (mng.avgHeroWin * (heroesDead-1) + hero.winCount) / heroesDead;
+        mng.avgHeroDeath = (mng.avgHeroDeath * (heroesDead-1) +hero.loseCount) / heroesDead;
         myHeroes.Remove(hero);
         PlayerPrefs.SetInt((int)HeroesManager.singleton.activeTournament + "," +hero.id,0);
     }

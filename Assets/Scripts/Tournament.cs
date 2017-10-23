@@ -7,7 +7,7 @@ public class Tournament : ScriptableObject
 {
     public HeroesManager.TournamentType tournamentType;
     public int numHeroes;
-    public float loseCountMultiplier = 0.5f;
+    public float loseCountMultiplier = 3f;
     public int winLoseForRankUp = 5;
 	
 }
